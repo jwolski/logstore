@@ -25,9 +25,7 @@ func (p *Parser) Parse(logFile *os.File) ([]*api.PutRequest, error) {
 	scanner := bufio.NewScanner(logFile)
 	for scanner.Scan() {
 		// Transform log line into request object. If parsing the log line
-		// fails, continue parsing the rest of the log lines. If the verbose
-		// flag has been specified, print an error as to why parsing the log
-		// line had failed.
+		// fails, continue parsing the rest of the log lines.
 		req, err := line2Req(scanner.Text())
 		if err != nil {
 			// TODO: Don't ignore this error outright. Do something better.
