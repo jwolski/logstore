@@ -1,4 +1,4 @@
-package: personal/logstore
+package: github.com/jwolski/logstore
 import:
 - package: github.com/golang/protobuf
   subpackages:

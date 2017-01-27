@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strings"
 
 	"gopkg.in/mgo.v2"
 )
@@ -13,6 +14,7 @@ var (
 
 // Stores log records to persistence storage.
 type store interface {
+	addr() string
 	close()
 	save(*logRecord) error
 }
@@ -46,6 +48,11 @@ func dialMongo(conf mongoConfig) (store, error) {
 	}
 	mongo.session = session
 	return mongo, nil
+}
+
+// Returns comma-separated list of server addresses to which we are connected
+func (s *mongoStore) addr() string {
+	return strings.Join(s.session.LiveServers(), ",")
 }
 
 // Closes outstanding Mongo session

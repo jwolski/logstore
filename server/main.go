@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"github.com/jwolski/logstore/api"
 
@@ -19,7 +20,7 @@ const (
 )
 
 var (
-	port = flag.Uint("port", 3333, "Listen port")
+	port = flag.Uint("port", 5000, "Listen port")
 	db   = flag.String("db", string(Mongo), "Database backend")
 )
 
@@ -27,8 +28,13 @@ func setupStore() (store, error) {
 	// Only MongoDB is supported thus far.
 	switch *db {
 	default:
-		// TODO: Expose Mongo config as optional command-line flag
-		return dialMongo(defaultMongoConf)
+		mongoConf := defaultMongoConf
+		// Use the env variable (provided by Wercker) to set the Mongo URL. This
+		// is not great as it assumes operating within a Wercker environmemnt.
+		if addr := os.Getenv("MONGO_PORT_27017_TCP_ADDR"); addr != "" {
+			mongoConf.url = addr
+		}
+		return dialMongo(mongoConf)
 	}
 }
 
@@ -41,15 +47,16 @@ func main() {
 	// TODO: Close() the `store` on shutdown
 	store, err := setupStore()
 	if err != nil {
-		log.Fatalf("setup store failed")
+		log.Fatalf("setup store failed: %s", err.Error())
 	}
+	log.Printf("connected to db @ %s", store.addr())
 
 	// Setup TCP server
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("server listen failed")
 	}
-	log.Printf("tcp listening on %d", *port)
+	log.Printf("server listening on %d", *port)
 
 	// Setup GRPC server and start serving traffic
 	grpcServer := grpc.NewServer()
