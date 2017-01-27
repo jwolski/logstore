@@ -1,4 +1,8 @@
 box: golang
+
+services:
+    - id: mongo
+
 build:
     steps:
         - wercker/setup-go-workspace@1.3.0:
