@@ -64,7 +64,7 @@ func line2Req(line string) (*api.PutRequest, error) {
 	return &api.PutRequest{
 		Owner:          name2Match["Owner"],
 		Bucket:         name2Match["Bucket"],
-		Timestamp:      "",
+		Timestamp:      "", // TODO: Fill this field in.
 		RawTimestamp:   name2Match["RawTimestamp"],
 		ClientIp:       name2Match["ClientIp"],
 		Requester:      name2Match["Requester"],
