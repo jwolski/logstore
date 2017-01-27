@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package api;
+
+message PutRequest {
+    string owner = 1;
+    string bucket = 2;
+    string timestamp = 3;
+    string rawTimestamp = 4;
+    string clientIp = 5;
+    string requester = 6;
+    string requestId = 7;
+    string operation = 8;
+    string key = 9;
+    string verb = 10;
+    string uri = 11;
+    string protocol = 12;
+    int32 statusCode = 13;
+    int32 errorCode = 14;
+    int32 bytesSent = 15;
+    int32 objectSize = 16;
+    int32 timeTotal = 17;
+    int32 timeTurnAround = 18;
+    string referrer = 19;
+    string userAgent = 20;
+    string versionId = 21;
+}
+
+message PutResponse {
+    int32 errCode = 1;
+}
+
+service Log {
+    rpc Put(PutRequest) returns (PutResponse) {}
+}
