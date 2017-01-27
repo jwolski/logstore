@@ -45,7 +45,8 @@ func (p *Parser) Parse(logFile *os.File) ([]*api.PutRequest, error) {
 
 // Transforms a log line into a `PutRequest`.
 func line2Req(line string) (*api.PutRequest, error) {
-	// TODO: Implement this.
+	// Match the log line against the expected regex and convert matched groups
+	// to a prepared `PutRequest`.
 	regex, err := regexp.Compile(logPattern)
 	if err != nil {
 		return nil, err
@@ -55,12 +56,12 @@ func line2Req(line string) (*api.PutRequest, error) {
 	// from matched values.
 	names := regex.SubexpNames()
 	matches := regex.FindStringSubmatch(line)
-
 	name2Match := map[string]string{}
 	for i, m := range matches {
 		name2Match[names[i]] = m
 	}
 
+	// Translate matched groups into a `PutRequest`.
 	return &api.PutRequest{
 		Owner:          name2Match["Owner"],
 		Bucket:         name2Match["Bucket"],
