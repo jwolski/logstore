@@ -2,22 +2,29 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
+
+	"golang.org/x/net/context"
+
+	"google.golang.org/grpc"
 
 	"github.com/jwolski/logstore/api"
 )
 
 const (
 	// Expected format of log file contents. See `file` flag.
-	logPattern = `(\\S+) (\\S+) (\\S+ \\+\\S+\\]) (\\S+) (\\S+) (\\S+) (\\S+)
+	logPattern = `(?P<Owner>\S+) (\\S+) (\\S+ \\+\\S+\\]) (\\S+) (\\S+) (\\S+) (\\S+)
 	(\\S+) \"(\\S+) (\\S+) (\\S+)\" (\\S+) (\\S+) (\\S+) (\\S+) (\\S+) (\\S+)
 	\"(.+)\" \"(.+)\" (\\S+)`
 )
 
 var (
 	filename = flag.String("file", "", "Log file")
+	server   = flag.String("server", "", "Server address")
 	verbose  = flag.Bool("verbose", false, "Debug output")
 )
 
@@ -66,21 +73,49 @@ func main() {
 		log.Fatalf("file is required")
 	}
 
+	if *server == "" {
+		log.Fatalf("server is required")
+	}
+
 	file, err := os.Open(*filename)
 	if err != nil {
 		log.Fatalf("failed to open file")
 	}
+	defer file.Close()
 
 	putReqs, err := parseLogFile(file)
 	if err != nil {
 		log.Fatalf("failed to parse log file")
 	}
 
-	// Send all requests individually to logstore server.
+	// Connect to the gRPC server
+	conn, err := grpc.Dial(*server, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("failed to connect to server: %s", err.Error())
+	}
+	defer conn.Close()
+
+	// Create a new gRPC client and send requests to server. Catalog
+	// all errors that have occurred. Report them after we're all done.
+	client := api.NewLogClient(conn)
+	putErrs := make([]error, 0)
 	for _, r := range putReqs {
-		log.Println(r.Owner)
+		resp, err := client.Put(context.Background(), &r)
+		// Treat this as a (gRPC) client error.
+		if err != nil {
+			putErrs = append(putErrs, err)
+			continue
+		}
+
+		// Treat this as a server error.
+		if resp.ErrCode != 0 {
+			putErrs = append(putErrs,
+				errors.New(fmt.Sprintf("server error: %d", resp.ErrCode)))
+			continue
+		}
 	}
 
-	// Cleanup
-	file.Close()
+	if len(putErrs) > 0 {
+		log.Printf("%d of %d requests failed.", len(putErrs), len(putReqs))
+	}
 }
