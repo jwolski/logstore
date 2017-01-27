@@ -40,7 +40,7 @@ func main() {
 	parser := &Parser{}
 	putReqs, err := parser.Parse(file)
 	if err != nil {
-		log.Fatalf("failed to parse log file")
+		log.Fatalf("failed to parse log file: %s", err.Error())
 	}
 
 	// Create a request sender and send requests.
