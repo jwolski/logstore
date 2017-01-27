@@ -60,6 +60,7 @@ func (s *mongoStore) close() {
 func (s *mongoStore) save(r *logRecord) error {
 	coll := s.session.DB(s.conf.db).C(s.conf.collection)
 	if err := coll.Insert(r); err != nil {
+		// TODO: Log an error or emit a stat
 		return err
 	}
 	return nil

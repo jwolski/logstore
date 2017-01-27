@@ -75,7 +75,6 @@ func line2Req(line string) (*api.PutRequest, error) {
 		name2Match[names[i]] = m
 	}
 
-	log.Printf("%s", name2Match)
 	return &api.PutRequest{
 		Owner:          name2Match["Owner"],
 		Bucket:         name2Match["Bucket"],
@@ -83,6 +82,7 @@ func line2Req(line string) (*api.PutRequest, error) {
 		RawTimestamp:   name2Match["RawTimestamp"],
 		ClientIp:       name2Match["ClientIp"],
 		Requester:      name2Match["Requester"],
+		RequestId:      name2Match["RequestId"],
 		Operation:      name2Match["Operation"],
 		Key:            name2Match["Key"],
 		Verb:           name2Match["Verb"],
@@ -123,7 +123,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to parse log file")
 	}
-	os.Exit(1)
 
 	// Connect to the gRPC server
 	conn, err := grpc.Dial(*server, grpc.WithInsecure())
@@ -153,7 +152,8 @@ func main() {
 	}
 
 	if len(putErrs) > 0 {
-		log.Printf("%d of %d requests failed.", len(putErrs), len(putReqs))
+		log.Fatalf("%d of %d requests failed.", len(putErrs), len(putReqs))
 	}
-	os.Exit(1)
+
+	log.Printf("%d requests were sent successfully.", len(putReqs))
 }

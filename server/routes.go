@@ -30,7 +30,7 @@ func (r *routes) Put(ctx context.Context, req *api.PutRequest) (*api.PutResponse
 
 	// Save log record to the storage backend. Respond with a `errSave` if
 	// anything goes wrong.
-	if err := r.store.save(&logRecord{}); err != nil {
+	if err := r.store.save(req2LogRecord(req)); err != nil {
 		resp.ErrCode = errSave
 	}
 
